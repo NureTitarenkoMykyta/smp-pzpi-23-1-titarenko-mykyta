@@ -1,0 +1,390 @@
+ 
+ 
+Міністерство освіти і науки України 
+ 
+ 
+ 
+Харківський національний університет радіоелектроніки 
+ 
+ 
+ 
+ 
+ 
+ 
+ 
+Кафедра програмної інженерії 
+ 
+ 
+ 
+
+
+
+ 
+Звіт з лабораторної роботи №2
+з дисципліни «Скриптові мови програмування» 
+ 
+ 
+ 
+ 
+ 
+
+
+
+
+
+
+ 
+Виконав:                                                                              Перевірили: 
+гр.ПЗПІ-23-1                                                                       Сокорчук Ігор 
+Тітаренко Микита                                                              Петрович 
+ 
+ 
+ 
+
+
+Харків 2025 
+ЗАВДАННЯ 
+ 
+Створити консольний застосунок «Продовольчий магазин "Весна"».
+Програма після запуску повинна вивести на термінал перелік можливих дій.
+Далі програма очікує введення значення з клавіатури. Якщо користувач вводить число, якого немає в списку можливих команд, необхідно вивести повідомлення про помилку і запропонувати користувачу ввести інше число.
+Щоб розпочати купувати товари, необхідно ввести число «1», після чого користувач повинен потрапити в режим закупівлі товарів.
+На екрані має з’явитися перелік продуктів. Щоб купити товар, необхідно ввести його номер.
+Після успішної перевірки на існування номера товару в списку, програма має попросити ввести кількість товару: кожен рядок складається з номера, назви товару і його вартості.
+Якщо номер товару і його кількість (менше 100 шт.) були вказані коректно, то товар додається в кошик.
+Якщо вказано кількість «0», то товар видаляється з кошика.
+Далі знову відображається перелік товарів і пропонується купити наступний товар.
+Якщо номер товару вказано неправильно, виводиться сповіщення про помилку, нову виводиться перелік товарів.
+Щоб завершити купувати товари і перейти до попереднього меню, необхідно ввести з клавіатури цифру «0».
+Щоб отримати підсумковий рахунок, потрібно ввести число «2».
+Рахунок має містити таку інформацію: №, назва, ціна товару, кількість товару, вартість товару. 
+У кінці чека має бути: РАЗОМ ДО CПЛАТИ: сума_за_всі_товари
+Щоб встановити свій профіль потрібно, ввести число «3», після чого програма попросить ввести ваше ім'я та ваш вік: Імʼя користувача не може бути порожнім і повинно містити хоча б одну літеру.
+Користувач не може бути молодшим 7-ми або старшим 150-ти років.
+Щоб завершити роботу та вийти з програми, потрібно ввести число «0».
+У програмі потрібно перевіряти інформацію, яку вводить користувач, а саме:
+	обраний пункт меню існує;
+	обраний товар існує;
+	введена кількість товару більша нуля;
+	імʼя користувача містить хча б одну літеру;
+	вік користувача становить від 7-ми до 150-ти років.
+
+ 
+ХІД РОБОТИ
+ 
+1.	Створення основних класів
+1.1.	Створення класу Product для зберігання товару: приватні змінні name і price; конструктор для присвоєння значень; get методи для отримання значень.
+1.2.	Створення класу SelectedProduct, який імітує обраний товар у кошику і наслідує батьківський клас Product за допомогою ключового слова extends. Виклик батьківського конструктора і присвоєння значення змінній quantity. Методи get і set для отримання і зміни значення кількості товару.
+1.3.	Створення класу GroceryStore в якому міститься вся логіка роботи магазину. Приватні змінні products і selectedProducts, які є масивами для зберігання товарів і обраних товарів відповідно. Конструктор, який ініціалізує обидва масив (selectedProducts спочатку порожній).
+2.	Інтерфейсні методи
+2.1.	Метод printShopName, який, як зрозуміло з назви, виводить назву магазину.
+2.2.	Метод printPossibleActions, який виводить можливі дії користувача.
+2.3.	Метод readAction, який зчитує введену цифру за допомогою . readline та викликає відповідний метод.
+3.	Вибір товарів і облік кошика
+3.1.	Метод selectProduct дозволяє користувачеві обрати товар за номером, викликає selectQuantity для введення кількості, та оновлює кошик. 
+3.2.	Метод selectQuantity перевіряє правильність введеної кількості. Якщо кількість нуль — товар видаляється з кошика. Якщо товар уже в кошику — кількість оновлюється. 
+3.3.	Метод findProductFromCart шукає товар у кошику за назвою. 
+4.	Виведення товарів
+4.1.	Методи printTitle та printProduct відповідають за форматоване виведення таблиць із назвами, цінами, кількостями та загальними сумами.
+4.2.	Метод printProducts показує товари: загальні, у кошику або фінальний рахунок, залежно від параметрів. Обраховується та виводиться загальна сума до сплати.
+4.3.	Метод formattedString застосовується для створення вирівнювання між колонками виводу.
+5.	Профіль користувача
+5.1.	Метод register запитує ім’я та вік користувача. Ім’я перевіряється регулярним виразом, дозволяючи лише літери, апострофи, дефіси та пробіли. Вік повинен бути у межах від 7 до 150 рокі. 
+ВИСНОВОК 
+ 
+Отже, виконавши лабораторну роботу №2, мною був реалізована програма для імітації продовольчого магазину. Я навчився створювати мінімалістичний застосунок на php, використовуючи умовні оператори, цикли, змінні та масиви для зберігання значень, регулярні вирази для валідації даних, функції. Також, була використана об’єктно-орієнтована модель для забезпечення більшої гнучкості і розширюваності коду.
+ 
+ВИКОРИСТАНІ ДЖЕРЕЛА 
+ 
+1.	Лекція 7: Основи PHP / Матеріали лекцій з дисципліни / Скриптові мови програмування / dl.nure. URL: https://dl.nure.ua/mod/page/view.php?id=669234 (дата звернення: 15.04.2025). 
+2.	Constants/ Довідник з мови / Посібник з PHP. URL:  https://www.php.net/manual/uk/language.constants.php (дата звернення: 16.04.2025).
+ 
+ДОДАТОК А
+Код програми:
+1.	<?php
+2.	// Магазин 
+3.	class GroceryStore{
+4.	    private $products;
+5.	    public const NAME = "НАЗВА";
+6.	    public const PRICE = "ЦІНА";
+7.	    public const AMOUNT = "КІЛЬКІСТЬ";
+8.	    public const COST = "ВАРТІСТЬ";
+9.	    public const TOTAL_PAYMENT = "РАЗОМ ДО CПЛАТИ: ";
+10.	    public const CART_EMPTY = "КОШИК ПОРОЖНІЙ";
+11.	    public const IN_CART = "У КОШИКУ:";
+12.	    private $selectedProducts;
+13.	    // Конструктор (ініціалізація масиву з продуктами)
+14.	    public function __construct(){
+15.	        $this->products = [
+16.	            new Product("Молоко пастеризоване", 12), 
+17.	            new Product("Хліб чорний", 9),
+18.	            new Product("Сир білий", price: 21),
+19.	            new Product("Сметана 20%", 25),
+20.	            new Product("Кефір 1%", 19),
+21.	            new Product("Вода газована", price: 18),
+22.	            new Product("Печиво \"Весна\"", 14)];
+23.	            $this->selectedProducts = [];
+24.	    }
+25.	    // Виведення назви магазину
+26.	    private function printShopName(){
+27.	        echo "
+28.	################################
+29.	# ПРОДОВОЛЬЧИЙ МАГАЗИН \"ВЕСНА\" #
+30.	################################
+31.	";
+32.	    }
+33.	    // Виведення дій користувача
+34.	    private function printPossibleActions(){
+35.	        echo "1 Вибрати товари
+36.	2 Отримати підсумковий рахунок
+37.	3 Налаштувати свій профіль
+38.	0 Вийти з програми
+39.	Введіть команду: ";
+40.	    }
+41.	    // Виведення заголовку для таблиці (загально, у кошику, у рахунку)
+42.	    private function printTitle($maxLengthForNumber, $maxLengthForName, $price, $quntity){
+43.	        if ($maxLengthForNumber != -1){
+44.	            echo "№" . $this->formattedString("№", $maxLengthForNumber);
+45.	        }
+46.	        echo self::NAME . $this->formattedString(self::NAME, $maxLengthForName);
+47.	        if ($price){
+48.	            echo self::PRICE;
+49.	        }
+50.	        if ($quntity){
+51.	            if ($price){
+52.	                echo "  ";
+53.	            }
+54.	            echo self::AMOUNT;
+55.	            if ($price){
+56.	                echo "  " . self::COST;
+57.	            }
+58.	        }
+59.	        echo "\n";
+60.	    }
+61.	    //Обчислення максимальної довжини назви товару
+62.	    private function maxLengthForName($products){
+63.	        $lengths = array_map(function ($product){
+64.	            return iconv_strlen($product->getName());
+65.	        }, $products);
+66.	        return ceil(max($lengths));
+67.	    }
+68.	    //Обчислення довжини номера (необов'язково)
+69.	    private function maxLengthForNumber($products){
+70.	        return strlen(strval(count($products)) );
+71.	    }
+72.	    //Виведення товару (загально, у кошику, у рахунку)
+73.	    private function printProduct($productIndex, $maxLengthForNumber, $name, $maxLengthForName, $price, $quantity = -1, $sum = -1){
+74.	        if ($productIndex != -1){
+75.	            echo $productIndex + 1 . $this->formattedString(strval($productIndex + 1), $maxLengthForNumber);
+76.	        } 
+77.	        echo $name . $this->formattedString($name, $maxLengthForName);
+78.	        if ($price != -1){
+79.	            echo $price;
+80.	        }
+81.	        if ($quantity != -1){
+82.	            if ($price != -1){
+83.	                echo $this->formattedString(strval($price), iconv_strlen(self::PRICE));
+84.	            }
+85.	            echo $quantity;
+86.	            if ($sum != -1){
+87.	                echo $this->formattedString(strval($quantity), iconv_strlen(self::AMOUNT)) . $sum;
+88.	            }
+89.	        }
+90.	    }
+91.	    //Виведення товарів (усіх, у кошику або в рахунку)
+92.	    private function printProducts($products, $cart, $totalBill){
+93.	        if ($cart == true && count($products) == 0) {
+94.	            echo self::CART_EMPTY . "\n";
+95.	        } else {
+96.	            if ($cart == true && !$totalBill){
+97.	                echo self::IN_CART . "\n";
+98.	            }
+99.	            $maxLengthForNumber = -1;
+100.	            $maxLengthForName = $this->maxLengthForName($products);
+101.	            if ($totalBill || !$cart){
+102.	                $maxLengthForNumber = $this->maxLengthForNumber($products);
+103.	            }
+104.	            $this->printTitle($maxLengthForNumber, $maxLengthForName, $totalBill || !$cart, $cart);
+105.	            $totalSum = 0;
+106.	            for($i = 0; $i < count($products); $i++){
+107.	                $productIndex = -1;
+108.	                $price = -1;
+109.	                $quantity = -1;
+110.	                $sum = -1;
+111.	                if ($totalBill || !$cart){
+112.	                    $productIndex = $i;
+113.	                    $price = $products[$i]->getPrice();
+114.	                    if ($totalBill){
+115.	                        $quantity = $products[$i]->getQuantity();
+116.	                        $sum = $products[$i]->getQuantity() * $products[$i]->getPrice();
+117.	                        $totalSum += $sum;
+118.	                    }
+119.	                } else {
+120.	                    $quantity = $products[$i]->getQuantity();
+121.	                }
+122.	                $this->printProduct($productIndex, 
+123.	                $maxLengthForNumber,
+124.	                $products[$i]->getName(),
+125.	                $maxLengthForName,
+126.	                $price,
+127.	                $quantity,
+128.	                $sum
+129.	                );
+130.	                if ($i + 1 < count($products)){
+131.	                    echo "\n";
+132.	                }
+133.	            }
+134.	            if ($totalBill){
+135.	                echo "\n" . self::TOTAL_PAYMENT . $totalSum . "\n";
+136.	            } else if (!$cart){
+137.	                echo $this->formattedString("", $maxLengthForNumber) . "\n-----------\n";
+138.	                echo "0" . $this->formattedString("0", $maxLengthForNumber);
+139.	                echo "ПОВЕРНУТИСЯ\nВиберіть товар: ";
+140.	            } else {
+141.	                echo "\n";
+142.	            }
+143.	        }
+144.	        if ($totalBill){
+145.	            echo "\n";
+146.	        }
+147.	    }
+148.	    // Обрання товару
+149.	    private function selectProduct(){
+150.	        while (true){
+151.	            $number = readline($this->printProducts($this->products, false, false));
+152.	            if ($number == 0){
+153.	                break;
+154.	            }
+155.	            if (count($this->products) < $number || $number < 0){
+156.	                echo "ПОМИЛКА! Ви вказали неправильний номер товару\n";
+157.	            } else {
+158.	                echo "Вибрано: " . $this->products[$number - 1]->getName() . "\n";
+159.	                $this->selectQuantity($number - 1);
+160.	                $this->printProducts($this->selectedProducts, true,false);
+161.	            }
+162.	            echo "\n";
+163.	        }
+164.	    }
+165.	    // Обрання кількості обраного товару
+166.	    private function selectQuantity($productIndex){
+167.	            $quantity = readline("Введіть кількість, штук: ");
+168.	            if (is_numeric($quantity) && $quantity < 100 && $quantity >= 0){
+169.	                $selectedProductIndex = $this->findProductFromCart($this->products[$productIndex]->getName());
+170.	                if ($selectedProductIndex != -1){
+171.	                    if ($quantity == 0){
+172.	                        unset($this->selectedProducts[$selectedProductIndex]);
+173.	                        $this->selectedProducts = array_values($this->selectedProducts);
+174.	                        echo "ВИДАЛЯЮ ТОВАР З КОШИКА\n";
+175.	                    } else {
+176.	                        $this->selectedProducts[$selectedProductIndex]->setQuantity($quantity);
+177.	                    }
+178.	                } else {
+179.	                    if ($quantity != 0){
+180.	                        array_push($this->selectedProducts, new SelectedProduct($this->products[$productIndex], $quantity));
+181.	                    }
+182.	                }
+183.	                return true;
+184.	            } else {
+185.	                echo "ПОМИЛКА! Ви вказали неправильну кількість товару\n";
+186.	                return false;
+187.	            }
+188.	    }
+189.	    // Перевірка наявності товару у кошику (перевірка за назвою) 
+190.	    private function findProductFromCart($productName){
+191.	        for ($selectedProductIndex = 0; $selectedProductIndex < count($this->selectedProducts); $selectedProductIndex++){
+192.	            if ($this->selectedProducts[$selectedProductIndex]->getName() == $productName){
+193.	                return $selectedProductIndex;
+194.	            }
+195.	        }
+196.	        return -1;
+197.	    }
+198.	    // Додавання вирівнювання до рядка
+199.	    private function formattedString($data, $maxLength){
+200.	        $secondSpace = "";
+201.	        return str_pad($secondSpace, ceil($maxLength - iconv_strlen($data)) + 2);
+202.	    }
+203.	    // Введення ім'я і віку користувача
+204.	    private function register(){
+205.	        while (true) {
+206.	            $name = readline("Ваше ім'я: ");
+207.	            if ($name == "") {
+208.	                continue;
+209.	            } else if (preg_match("/^[\p{L}\'\- ]+$/u", $name)){
+210.	                break;
+211.	            } else {
+212.	                echo "ПОМИЛКА! Імʼя може містити лише літери, апостроф «'», дефіс «-», пробіл\n\n";
+213.	            }
+214.	        }
+215.	        while(true) {
+216.	            $age = readline("Ваш вік: ");
+217.	            if ($age < 7 || $age > 150){
+218.	                echo "ПОМИЛКА! Користувач повинен мати вік від 7 та до 150 років\n\n";
+219.	            } else {
+220.	                break;
+221.	            }
+222.	        }
+223.	        echo "\n";
+224.	    }
+225.	    // Зчитування події
+226.	    private function readAction(){
+227.	        $number = readline($this->printPossibleActions());
+228.	        switch ($number) {
+229.	            case 1:
+230.	                $this->selectProduct();
+231.	                break;
+232.	            case 2:
+233.	                $this->printProducts($this->selectedProducts, true,totalBill: true);
+234.	                break;
+235.	            case 3:
+236.	                $this->register();
+237.	                break;
+238.	            case 0:
+239.	                return false;
+240.	            default:
+241.	                echo "ПОМИЛКА! Введіть правильну команду";
+242.	            }
+243.	        return true;
+244.	    }
+245.	    // Запуск програми
+246.	    public function run(){
+247.	        $this->printShopName();
+248.	        while ($this->readAction());
+249.	    }
+250.	}
+251.	// Товар
+252.	class Product{
+253.	    private $name;
+254.	    private $price;
+255.	
+256.	    public function __construct($name, $price){
+257.	        $this->name = $name;
+258.	        $this->price = $price;
+259.	    }
+260.	
+261.	    public function getName(){
+262.	        return $this->name;
+263.	    }
+264.	
+265.	    public function getPrice(){
+266.	        return $this->price;
+267.	    }
+268.	}
+269.	// Обраний товар (товар у кошику)
+270.	class SelectedProduct extends Product{
+271.	    private $quanity;
+272.	    public function __construct($product, $quanity) {
+273.	        parent::__construct($product->getName(), $product->getPrice());
+274.	        $this->quanity = $quanity;
+275.	    }
+276.	
+277.	    public function getQuantity(){
+278.	        return $this->quanity;
+279.	    }
+280.	
+281.	    public function setQuantity($quantity){
+282.	        $this->quanity = $quantity;
+283.	    }
+284.	}
+285.	// Початок програми
+286.	$shope = new GroceryStore();
+287.	$shope->run();

@@ -1,0 +1,402 @@
+Харківський національний університет радіоелектроніки
+Факультет комп’ютерних наук
+Катедра програмної інженерії
+
+ЗВІТ
+з лабораторної роботи № 3
+з дисципліни «Скриптові мвои прогармування»
+на тему: «Створення web-застосунків за допомогою php»
+
+Виконав
+ст. гр. ПЗПІ-23-1
+Тітаренко Микита
+Перевірив
+ст. викладач катедри ПІ
+Сокорчук Ігор Петрович
+
+Харків 2025
+								                                                   2
+1 ІСТОРІЯ ЗМІН
+№	Дата	Версія звіту	Опис змін та виправлень
+1	10.05.2025	0.1	Створено звіту
+								                                                   3
+2 ЗАВДАННЯ
+- Створити інтернет-магазин, використовуючи php та html, який складається з header, main і footer;
+- Реалізувати додавання товарів до кошика, зміна кількості, вилучення товару;
+- Дані зберігати в базі даних SQLite, параметри передавати через методи GET і POST;
+- Перевірка валідності даних, реалізація їх відображення у вигляді форми і таблиці.
+								                                                   4
+3 ОПИС ВИКОНАНОЇ РОБОТИ
+	1.	Створення структури сайту
+		1.1.	За допомогою html реалізуємо header, main і footer. Header і footer підключаємо через require_once задля обов’язкового підключення тільки один раз.
+		1.2.	Створюємо сторінки products.php і cart.php для відображення товарів і кошика відповідно, використовуючи форми і таблиці. Реалізуємо правильне вирівнювання за допомогою стилів.
+	2.	Створення бази даних через SQLite
+		2.1.	Створюємо екземпляр бази даних через new PDO та викликаємо запити через exec.
+		2.2.	Створюємо таблицю product (відображення товару в магазині), user (користувач з певним id) і user_product, який має два зовнішніх ключі – user_id і product_id і відображає обраний користувачем товар.
+		2.3.	Використовуючи INSERT додаємо до таблиці product товари.
+	3.	Обробка форми на сервері
+		3.1.	Динамічно створюємо форму, де зберігаємо індекс товару і обрану кількість користувачем.
+		3.2.	При натисканні кнопки submit відправляємо дані на сервер за допомогою POST і передаємо саму дію через GET. Якщо кількість більше 0 і його ще не було - додаємо до бази даних черех INSERT; якщо більше 0, але цей товар вже був – редагуємо через UPDATE; якщо 0 і товар вже є – видаляємо через DELETE. Перенаправляємо на сторінку cart.php через header.
+		3.3.	Зберігаємо user_id у сесії через асоціативний масив $_SESSION. Перед використанням спочатку використовуємо session_start() для її створення.
+	4.	Відображення даних з бази даних
+		4.1.	Підключаємося до бази даних через new PDO. На сторінці cart.php відображуємо обрані товари з бази даних, отримуючи асоціативний масив через fetchAll і динамічно відображуючи у таблиці.
+		4.2.	Якщо у користувача немає ні одного товару, замість таблиці відображаємо напис, що кошик порожній.
+	5.	Виведення товарів
+		5.1.	Зберігаємо індекс товара для видалення. При натисканні передаємо індекс видаленого товара через POST і саму дію через GET.
+		5.2.	Видаляємо потрібний товар за індексом через DELETE.
+								                                                   5
+4 ВИСНОВКИ
+- Отже, виконавши лабораторну роботу №3, мною був розроблен сайт інтернет-магазину, використовуючи вбудований сервер php;
+- Я навчився обробляти HTTP запити, включати файли за допомогою include, працювати з формами та передавати дані методом POST;
+- Реалізоване зберігання та отримання даних через базу даних SQLite.
+								                                                   6
+ДОДАТОК А
+Відеозапис
+Відеозапис презентації результатів лабораторної роботи: https://www.youtube.com/watch?v=w7OPUjXiwuw
+
+Хронологічний опис відеозапису:
+
+0:00 - Створення бази даних (setup.php);
+1:29 - Основна сторінка (index.php);
+2:41 - Відображення товарів (products.php);
+4:25 - Обробка POST запиту та додавання товарів до бази даних;
+5:40 - Відображення товарів у кошику та видалення з нього;
+7:06 - Показ результату роботи.
+								                                                   7
+ДОДАТОК Б
+Програмний код
+Б.1 { index.php }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab3/smp-pzpi-23-1-titarenko-mykyta-lab3/smp-pzpi-23-1-titarenko-mykyta-lab3-code/index.php
+
+1	<?php
+2	$db = new PDO('sqlite:shop.db');
+3	ini_set('session.save_path', '.');
+4	session_start();
+5	if (!isset($_SESSION['user_id'])) {
+6	    $db->exec('INSERT INTO user DEFAULT VALUES');
+7	    $user_id = $db->lastInsertId();
+8	    $_SESSION['user_id'] = $user_id;
+9	} else {
+10	    $user_id = $_SESSION['user_id'];
+11	}
+12	
+13	//Додавання товару у кошик користувача
+14	function insertProduct($index, $quantity)
+15	{
+16	    global $db;
+17	    global $user_id;
+18	    $statement = $db->prepare('INSERT INTO user_product (user_id, product_id, quantity) VALUES (:user_id, :product_id, :quantity)');
+19	    $statement->bindParam(':user_id', $user_id);
+20	    $statement->bindParam(':product_id', $index);
+21	    $statement->bindParam(':quantity', $quantity);
+22	    $statement->execute();
+23	}
+24	
+25	//Перевірка на наявність товару у кошику користувача
+26	function isExist($index){
+27	    global $db;
+28	    global $user_id;
+29	    $statement = $db->prepare('SELECT EXISTS(SELECT 1 FROM user_product WHERE user_id = :user_id AND product_id = :product_id) AS found');
+30	    $statement->bindParam(':user_id', $user_id);
+31	    $statement->bindParam(':product_id', $index);
+32	    $statement->execute();
+33	    $test = $statement->fetchAll(PDO::FETCH_ASSOC);
+34	    return $test;
+35	}
+36	
+37	//Оновлення кількості товару у кошику користувача
+38	function updateProductFromCart($index, $quantity){
+39	    global $db;
+40	    global $user_id;
+41	    $statement = $db->prepare('UPDATE user_product SET quantity = :quantity WHERE user_id = :user_id AND product_id = :product_id');
+42	    $statement->bindParam(':user_id', $user_id);
+43	    $statement->bindParam(':product_id', $index);
+44	    $statement->bindParam(':quantity', $quantity);
+45	    $statement->execute();
+46	}
+47	
+48	//Видалення товару з кошика користувача
+49	function deleteFromCart($index)
+50	{
+51	    global $db;
+52	    global $user_id;
+53	    $statement = $db->prepare('DELETE FROM user_product WHERE user_id = :user_id AND product_id = :product_id');
+54	    $statement->bindParam(':user_id', $user_id);
+55	    $statement->bindParam(':product_id', $index);
+56	    $statement->execute();
+57	}
+58	
+59	//Зміна товарів у сесії при завершенні купівлі зі сторінки products.php
+60	if (isset($_GET["product_purchased"])) {
+61	    foreach ($_POST['quantity'] as $index => $quantity) {
+62	        if ($quantity != "") {
+63	            if ($quantity > 0) {
+64	                if (isExist($index)[0]['found'] == 1){
+65	                    updateProductFromCart($index, $quantity);
+66	                } else {
+67	                    insertProduct($index, $quantity);
+68	                }
+69	            } else if ($quantity == 0 && isExist($index)) {
+70	                deleteFromCart($index);
+71	            }
+72	        }
+73	    }
+74	    header('Location: cart.php');
+75	
+76	    //Видалення товару з сесії зі сторінки cart.php
+77	} else if (isset($_GET["product_deleted"])) {
+78	    deleteFromCart($_POST["index"]);
+79	    header('Location: cart.php');
+80	    //Перенаправлення на сторінку products.php
+81	} else {
+82	    header('Location: products.php');
+83	}
+84	exit;
+85	?>
+
+Б.2 { products.php }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab3/smp-pzpi-23-1-titarenko-mykyta-lab3/smp-pzpi-23-1-titarenko-mykyta-lab3-code/products.php
+
+1	<?php
+2	$db = new PDO('sqlite:shop.db');
+3	ini_set('session.save_path', '.');
+4	session_start();
+5	
+6	if (isset($_SESSION['user_id'])) {
+7	    $user_id = $_SESSION['user_id'];
+8	} 
+9	
+10	//Отримання всіх товарів з магазину
+11	function getProducts()
+12	{
+13	    global $db;
+14	    global $user_id;
+15	    $statement = $db->query('SELECT product_id, product_name, product_price FROM product');
+16	    $statement->bindParam(':user_id', $user_id);
+17	    return $statement->fetchAll(PDO::FETCH_ASSOC);
+18	}
+19	?>
+20	
+21	<!DOCTYPE html>
+22	<html lang="en" style="height: 100%; display:flex; flex-direction: column;">
+23	<head>
+24	    <meta charset="UTF-8">
+25	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+26	    <title>Document</title>
+27	</head>
+28	<body style="height: 100%; display:flex; flex-direction: column;">
+29	    <header>
+30	        <?php
+31	            require_once 'header.html';
+32	        ?>
+33	    </header>
+34	    <main style="display: flex; flex: 1; justify-content: center; align-items: center;">
+35	        <form method="POST" action="index.php?product_purchased=true" style="display: flex; flex-direction: column;">
+36	                <table>
+37	                <!-- Відображення товарів -->
+38	                <?php foreach (getProducts() as $product) {?>
+39	                    <tr>
+40	                        <th><?php echo $product['product_name']?></th>
+41	                        <input type="hidden" name="index[<?php echo $product['product_id']?>]"  value="<?php echo $product['product_id']?>">
+42	                        <th><input type="number" min="0" name="quantity[<?php echo $product['product_id']?>]"></th>
+43	                        <th><?php echo $product['product_price']?></th>
+44	                    </tr>
+45	                <?php }?>
+46	                </table>
+47	                <input type="submit" style="margin-left: auto;" value="Send">
+48	        </form>
+49	    </main>
+50	    <?php require_once 'footer.html'; ?>
+51	</body>
+52	</html>
+
+Б.3 { cart}
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab3/smp-pzpi-23-1-titarenko-mykyta-lab3/smp-pzpi-23-1-titarenko-mykyta-lab3-code/cart.php
+
+1	<?php
+2	$db = new PDO('sqlite:shop.db');
+3	ini_set('session.save_path', '.');
+4	session_start();
+5	if (isset($_SESSION['user_id'])) {
+6	    $user_id = $_SESSION['user_id'];
+7	} 
+8	require_once 'header.html';
+9	
+10	//Отримання товарів з кошику користувача
+11	function getProductsFromCart()
+12	{
+13	    global $db;
+14	    global $user_id;
+15	    $statement = $db->prepare('
+16	    SELECT 
+17	        up.product_id, 
+18	        p.product_name, 
+19	        p.product_price, 
+20	        up.quantity, 
+21	        p.product_price * up.quantity AS total_price 
+22	    FROM user_product up 
+23	    LEFT JOIN product p
+24	    ON p.product_id = up.product_id
+25	    WHERE up.user_id = :user_id');
+26	    $statement->bindParam(':user_id', $user_id);
+27	    $statement->execute();
+28	    return $statement->fetchAll(PDO::FETCH_ASSOC);
+29	}
+30	
+31	//Отримання загальної ціни кошика
+32	function getTotalPrice(){
+33	    global $db;
+34	    global $user_id;
+35	    $statement = $db->prepare('SELECT SUM(p.product_price * up.quantity) AS total_sum 
+36	        FROM user_product up 
+37	        LEFT JOIN product p
+38	        ON up.product_id = p.product_id
+39	        WHERE up.user_id = :user_id');
+40	    $statement->bindParam(':user_id', $user_id);
+41	    $statement->execute();
+42	    return $statement->fetch(PDO::FETCH_COLUMN);
+43	}
+44	?>
+45	<!DOCTYPE html>
+46	<html lang="en" style="height: 100%; display: flex; flex-direction: column;">
+47	
+48	<head>
+49	    <meta charset="UTF-8">
+50	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+51	    <title>Document</title>
+52	</head>
+53	
+54	<body style="height: 100%; display: flex; flex-direction: column;">
+55	    <?php
+56	    $productsFromCart = getProductsFromCart();
+57	    //Відображення товарів
+58	    if (count($productsFromCart) > 0) { ?>
+59	        <main style="display: flex; justify-content: center; align-items: center; flex: 1; flex-direction: column">
+60	            <form method="POST" action="index.php?product_deleted=true">
+61	                <table style="border: 3px solid black; border-collapse: collapse;">
+62	                    <tr>
+63	                        <th style="border: 3px solid black">id</th>
+64	                        <th style="border: 3px solid black">name</th>
+65	                        <th style="border: 3px solid black">price</th>
+66	                        <th style="border: 3px solid black">count</th>
+67	                        <th style="border: 3px solid black">sum</th>
+68	                        <th style="border: 3px solid black"></th>
+69	                    </tr>
+70	                    <?php
+71	                    foreach ($productsFromCart as $product) { ?>
+72	                        <tr>
+73	                            <th style="border: 3px solid black"><?php echo $product['product_id'] ?></th>
+74	                            <th style="border: 3px solid black"><?php echo $product['product_name'] ?></th>
+75	                            <th style="border: 3px solid black"><?php echo $product['product_price'] ?></th>
+76	                            <th style="border: 3px solid black"><?php echo $product['quantity'] ?></th>
+77	                            <th style="border: 3px solid black"><?php echo $product['total_price'] ?>
+78	                            </th>
+79	                            <th style="border: 3px solid black">
+80	                                <button type="submit" name="index" value="<?php echo $product['product_id'] ?>">Delete</button>
+81	                            </th>
+82	                        </tr>
+83	                    <?php } ?>
+84	                    <tr>
+85	                        <th style="border: 3px solid black">Total</th>
+86	                        <th style="border: 3px solid black"></th>
+87	                        <th style="border: 3px solid black"></th>
+88	                        <th style="border: 3px solid black"></th>
+89	                        <th style="border: 3px solid black"><?php echo getTotalPrice() ?></th>
+90	                        <th style="border: 3px solid black"></th>
+91	                    </tr>
+92	                </table>
+93	                <div style="display: flex; flex-direction: row; margin-left: 150px;">
+94	                    <button style="margin: 10px"><a href="products.html">cancle</a></button>
+95	                    <button style="margin: 10px" type="button">pay</button>
+96	                </div>
+97	                <?php
+98	    } else {
+99	        ?>
+100	                <main style="display: flex; justify-content: center; align-items: center; flex: 1;">
+101	                    <a href="product.html">Перейти до покупок</a>
+102	                    <?php
+103	    } ?>
+104	        </form>
+105	    </main>
+106	    <?php require_once 'footer.html'; ?>
+107	</body>
+108	
+109	</html>
+
+Б.4 { setup.php }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab3/smp-pzpi-23-1-titarenko-mykyta-lab3/smp-pzpi-23-1-titarenko-mykyta-lab3-code/setup.php
+
+1	<?php
+2	$db = new PDO('sqlite:shop.db');
+3	$db->exec("CREATE TABLE IF NOT EXISTS user (
+4	    user_id INTEGER PRIMARY KEY AUTOINCREMENT
+5	)");
+6	$db->exec("CREATE TABLE IF NOT EXISTS product (
+7	    product_id INTEGER PRIMARY KEY AUTOINCREMENT, 
+8	    product_name TEXT, 
+9	    product_price TEXT
+10	)");
+11	
+12	$db->exec("CREATE TABLE IF NOT EXISTS user_product (
+13	    user_id INTEGER, 
+14	    product_id INTEGER, 
+15	    quantity INTEGER,
+16	    PRIMARY KEY(user_id, product_id),
+17	    FOREIGN KEY(user_id) REFERENCES user(user_id),
+18	    FOREIGN KEY(product_id) REFERENCES product(product_id)
+19	)");
+20	
+21	echo $db->exec("SELECT * FROM product");
+22	
+23	$db->exec("INSERT INTO product (product_name, product_price) VALUES 
+24	    ('Молоко пастеризоване', 12),
+25	    ('Хліб чорний', 9),
+26	    ('Сир білий',  2),
+27	    ('Сметана 20%', 25),
+28	    ('Кефір 1%', 19),
+29	    ('Вода газована', 18),
+30	    ('Печиво \"Весна\"', 14)");
+
+Б.5 { header.html }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab3/smp-pzpi-23-1-titarenko-mykyta-lab3/smp-pzpi-23-1-titarenko-mykyta-lab3-code/header.html
+
+1	<header style="display: flex; justify-content: space-around;">
+2	    <nav style="display: flex; align-items:center">
+3	        <img src="images/home_icon.png" width="50px" height="50px">
+4	        <a href="index.php">Home</a>
+5	    </nav>
+6	    <nav style="display: flex; align-items:center">
+7	        <img src="images/menu_icon.png" width="50px" height="50px">
+8	        <a href="products.php">Products</a>
+9	    </nav>
+10	    <nav style="display: flex; align-items:center">
+11	        <img src="images/cart_icon.png" width="50px" height="50px">
+12	        <a href="cart.php">Cart</a>
+13	    </nav>
+14	</header>
+
+
+Б.6 { footer.html }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab3/smp-pzpi-23-1-titarenko-mykyta-lab3/smp-pzpi-23-1-titarenko-mykyta-lab3-code/footer.html
+
+1	<footer style="display: flex; justify-content: space-around;">
+2	    <nav>
+3	        <a href="index.php">Home</a>
+4	    </nav>
+5	    <nav>
+6	        <a href="products.php">Products</a>
+7	    </nav>
+8	    <nav>
+9	        <a href="cart.php">Cart</a>
+10	    </nav>
+11	    <nav>
+12	        <a href="#">About us</a>
+13	    </nav>
+14	</footer>
+								                                                   8

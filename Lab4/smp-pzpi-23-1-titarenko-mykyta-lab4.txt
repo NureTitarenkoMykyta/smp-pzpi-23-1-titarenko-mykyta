@@ -1,0 +1,620 @@
+Харківський національний університет радіоелектроніки
+Факультет комп’ютерних наук
+Катедра програмної інженерії
+
+ЗВІТ
+з лабораторної роботи № 4
+з дисципліни «Скриптові мвои прогармування»
+на тему: «Створення web-застосунків за допомогою php»
+
+Виконав
+ст. гр. ПЗПІ-23-1
+Тітаренко Микита
+Перевірив
+ст. викладач катедри ПІ
+Сокорчук Ігор Петрович
+
+Харків 2025
+								                                                   2
+1 ІСТОРІЯ ЗМІН
+№	Дата	Версія звіту	Опис змін та виправлень
+1	12.05.2025	0.1	Створено звіту
+								                                                   3
+2 ЗАВДАННЯ
+- Додати авторизацію користувача;
+- Заповнення та збереження персональних даних;
+- Завантаження та збереження зображення;
+- Обмеження доступу для незареєстрованих користувачів.
+								                                                   4
+3 ОПИС ВИКОНАНОЇ РОБОТИ
+	1.	Авторизація користувача
+		1.1.	Створення сторінки login.php, яка одночасно слугує для реєстрації і входження користувача на сервер Розміщення у формі двох текстових полей (input type="text") і кнопки для підтвердження (input type="submit").
+		1.2.	Передача даних на сервер через POST. Перевірка, щоб довжина даних була більше одного символу. Перевірка наявності такого логіна в базі даних. Якщо його немає, то створюється новий користувач з відповідним логіном і паролем. Якщо є, то перевіряється пароль: якщо пароль правильний, то входження в акаунт, якщо немає, повертання помилки про некоректність паролю.
+		1.3.	При входженні в акаунт отримуємо user_id та записуємо у сесію, а також змінюємо останню дату входження. Якщо у сесії ще немає user_id, то блокування доступу до сторінок з товарами або кошиком.
+	2.	Зміна особистих даних
+		2.1.	Змінюємо таблицю user в нашій базі даних, а саме додаємо такі поля, як login, password, user_name, user_surname, birthday_date, description.
+		2.2.	Реалізуємо сторінку profile,php для редагування особистої інформації. Як і на сторінці login, використовуємо форму і відповідні поля для введення значень, які надсилаються через POST.
+		2.3.	Перевірка надісланих даних, додавання до бази даних у разі їх правильності. Якщо якесь поле не відповідає вимогам – надсилання помилки.
+	3.	Завантаження зображення
+		3.1.	Використовуємо форму типу enctype="multipart/form-data" та кнопка для завантаження зображення input id="file" type="file". 
+		3.2.	Отримання зображення на сервері через масив $_FILES та збереження в папці uploads, використовуючи метод move_uploaded_file. Називаємо зображення використовуючи id користувача, щоб потім його легко можна було завантажити. Видаляємо перед цим старе зображення, якщо воно було.
+								                                                   5
+4 ВИСНОВКИ
+- Отже, виконавши лабораторну роботу №4, мною був розширений сайт інтернет-магазину, використовуючи вбудований сервер php;
+- Я навчився обробляти HTTP запити, використовувати сесію, працювати з формами та передавати дані методом POST;
+- Збереження та виведення зображень;
+- Реалізоване зберігання та отримання даних через базу даних SQLite.
+								                                                   6
+ДОДАТОК А
+Відеозапис
+Відеозапис презентації результатів лабораторної роботи: https://youtu.be/EazdvTylDm8
+
+Хронологічний опис відеозапису:
+
+0:00 - Перевірка авторизації та відображення в одній сторінці;
+1:02 - Авторизація користувача (login.php);
+4:03 - Завантаження зображення (profile.php);
+6:28 - Зміна персональних даних (profile.php);
+7:25 - Показ програми.
+								                                                   7
+ДОДАТОК Б
+Програмний код
+Б.1 { index.php }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab4/smp-pzpi-23-1-titarenko-mykyta-lab4/smp-pzpi-23-1-titarenko-mykyta-lab4-code/index.php
+
+1	<?php
+2	$db = new PDO('sqlite:shop.db');
+3	ini_set('session.save_path', '.');
+4	session_start();
+5	if (isset($_SESSION['user_id'])) {
+6	    $user_id = $_SESSION['user_id'];
+7	}
+8	
+9	require_once('db_products_functions.php');
+10	require_once('db_user_functions.php');
+11	
+12	switch (true) {
+13	    //Зміна товарів у сесії при завершенні купівлі зі сторінки products.php
+14	    case isset($_GET["product_purchased"]):
+15	        require_once('header.php');
+16	        if (isset($_SESSION['user_id'])) {
+17	            require_once('products.php');
+18	        } else {
+19	            require_once('page404.php');
+20	            break;
+21	        }
+22	        if (isset($_POST['quantity'])) {
+23	            foreach ($_POST['quantity'] as $index => $quantity) {
+24	                if ($quantity != "") {
+25	                    if ($quantity > 0) {
+26	                        if (productInCartExist($index)[0]['found'] == 1) {
+27	                            updateProductFromCart($index, $quantity);
+28	                        } else {
+29	                            insertProduct($index, $quantity);
+30	                        }
+31	                    } else if ($quantity == 0 && productInCartExist($index)) {
+32	                        deleteFromCart($index);
+33	                    }
+34	                }
+35	            }
+36	        }
+37	        require_once('cart.php');
+38	        break;
+39	    //Видалення товару з сесії зі сторінки cart.php
+40	    case isset($_GET["product_deleted"]):
+41	        require_once('header.php');
+42	        deleteFromCart($_POST["index"]);
+43	        require_once('cart.php');
+44	        break;
+45	    case isset($_GET["login"]):
+46	        //Вихід з акаунту
+47	        if (isset($_SESSION['user_id'])) {
+48	            session_unset();
+49	            session_destroy();
+50	            require_once('header.php');
+51	            require_once('login.php');
+52	        } else {
+53	            if (isset($_POST['userName']) && isset($_POST['password'])) {
+54	                $login = $_POST['userName'];
+55	                $password = $_POST['password'];
+56	                if (strlen($login) <= 1 || strlen($password) <= 1) {
+57	                    $dataSuccess = false;
+58	                    require_once('header.php');
+59	                    require_once('login.php');
+60	                    break;
+61	                }
+62	                //Входження в акаунт
+63	                if (userExist($login)['found'] == 1) {
+64	                    $passwordSuccess = login($login, $password);
+65	                    if ($passwordSuccess) {
+66	                        require_once('header.php');
+67	                        require_once('products.php');
+68	                    } else {
+69	                        require_once('header.php');
+70	                        require_once('login.php');
+71	                    }
+72	                } else {
+73	                    //Створення нового акаунту
+74	                    registration($login, $password);
+75	                    require_once('header.php');
+76	                    require_once('products.php');
+77	                }
+78	            } else {
+79	                require_once('header.php');
+80	                require_once('login.php');
+81	            }
+82	        }
+83	        break;
+84	    case isset($_GET["profile"]):
+85	        //Завантаження зображення
+86	        if (isset($_FILES['userfile']) && $_FILES['userfile']['name'] != "") {
+87	            $extension = pathinfo($_FILES['userfile']['name'], PATHINFO_EXTENSION);
+88	            $file = glob('uploads/' . $user_id . '.*');
+89	            if (!empty($file[0])) {
+90	                unlink($file[0]);
+91	            }
+92	            move_uploaded_file($_FILES['userfile']['tmp_name'], 'uploads/' . $user_id . '.' . $extension);
+93	        } else if (isset($_POST['name'])) {
+94	            //Зміна особистих даних користувача
+95	            $changeSuccess = changeUserInformation($_POST['name'], $_POST['surname'], $_POST['birthdayDate'], $_POST['description']);
+96	        }
+97	        require_once('header.php');
+98	        require_once('profile.php');
+99	        break;
+100	    //Перенаправлення на сторінку products.php
+101	    default:
+102	        require_once('header.php');
+103	        if (isset($_SESSION['user_id'])) {
+104	            require_once('products.php');
+105	        } else {
+106	            require_once('page404.php');
+107	        }
+108	}
+109	require_once('footer.php');
+110	exit;
+111	?>
+
+Б.2 { products.php }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab4/smp-pzpi-23-1-titarenko-mykyta-lab4/smp-pzpi-23-1-titarenko-mykyta-lab4-code/products.php
+
+1	<?php
+2	require_once('db_products_functions.php');
+3	?>
+4	
+5	<!DOCTYPE html>
+6	<html lang="en" style="height: 100%; display:flex; flex-direction: column;">
+7	<head>
+8	    <meta charset="UTF-8">
+9	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+10	    <title>Products</title>
+11	</head>
+12	<body style="height: 100%; display:flex; flex-direction: column;">
+13	    <main style="display: flex; flex: 1; justify-content: center; align-items: center;">
+14	        <form method="POST" action="index.php?product_purchased" style="display: flex; flex-direction: column;">
+15	                <table>
+16	                <!-- Відображення товарів -->
+17	                <?php foreach (getProducts() as $product) {?>
+18	                    <tr>
+19	                        <th><img src="images/product<?php echo $product['product_id'] ?>.png" width="200"></th>
+20	                        <th><?php echo $product['product_name']?></th>
+21	                        <th><input type="number" min="0" name="quantity[<?php echo $product['product_id']?>]"></th>
+22	                        <th><?php echo $product['product_price']?></th>
+23	                    </tr>
+24	                <?php }?>
+25	                </table>
+26	                <input type="submit" style="margin-left: auto;" value="Send">
+27	        </form>
+28	    </main>
+29	</body>
+30	</html>
+
+Б.3 { cart}
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab4/smp-pzpi-23-1-titarenko-mykyta-lab4/smp-pzpi-23-1-titarenko-mykyta-lab4-code/cart.php
+
+1	<?php
+2	require_once('db_products_functions.php');
+3	?>
+4	<!DOCTYPE html>
+5	<html lang="en" style="height: 100%; display: flex; flex-direction: column;">
+6	
+7	<head>
+8	    <meta charset="UTF-8">
+9	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+10	    <title>Cart</title>
+11	</head>
+12	
+13	<body style="height: 100%; display: flex; flex-direction: column;">
+14	    <?php
+15	    $productsFromCart = getProductsFromCart();
+16	    //Відображення товарів
+17	    if (count($productsFromCart) > 0) { ?>
+18	        <main style="display: flex; justify-content: center; align-items: center; flex: 1; flex-direction: column">
+19	            <form method="POST" action="index.php?product_deleted">
+20	                <table style="border: 3px solid black; border-collapse: collapse;">
+21	                    <tr>
+22	                        <th style="border: 3px solid black">id</th>
+23	                        <th style="border: 3px solid black">name</th>
+24	                        <th style="border: 3px solid black">price</th>
+25	                        <th style="border: 3px solid black">count</th>
+26	                        <th style="border: 3px solid black">sum</th>
+27	                        <th style="border: 3px solid black"></th>
+28	                    </tr>
+29	                    <?php
+30	                    foreach ($productsFromCart as $product) { ?>
+31	                        <tr>
+32	                            <th style="border: 3px solid black"><?php echo $product['product_id'] ?></th>
+33	                            <th style="border: 3px solid black"><?php echo $product['product_name'] ?></th>
+34	                            <th style="border: 3px solid black"><?php echo $product['product_price'] ?></th>
+35	                            <th style="border: 3px solid black"><?php echo $product['quantity'] ?></th>
+36	                            <th style="border: 3px solid black"><?php echo $product['total_price'] ?>
+37	                            </th>
+38	                            <th style="border: 3px solid black">
+39	                                <button type="submit" name="index" value="<?php echo $product['product_id'] ?>">Delete</button>
+40	                            </th>
+41	                        </tr>
+42	                    <?php } ?>
+43	                    <tr>
+44	                        <th style="border: 3px solid black">Total</th>
+45	                        <th style="border: 3px solid black"></th>
+46	                        <th style="border: 3px solid black"></th>
+47	                        <th style="border: 3px solid black"></th>
+48	                        <th style="border: 3px solid black"><?php echo getTotalPrice() ?></th>
+49	                        <th style="border: 3px solid black"></th>
+50	                    </tr>
+51	                </table>
+52	                <div style="display: flex; flex-direction: row; margin-left: 150px;">
+53	                    <button style="margin: 10px"><a href="products.html">cancle</a></button>
+54	                    <button style="margin: 10px" type="button">pay</button>
+55	                </div>
+56	                <?php
+57	    } else {
+58	        ?>
+59	                <main style="display: flex; justify-content: center; align-items: center; flex: 1;">
+60	                    <a href="product.html">Перейти до покупок</a>
+61	                    <?php
+62	    } ?>
+63	        </form>
+64	    </main>
+65	</body>
+66	
+67	</html>
+
+Б.4 { setup.php }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab4/smp-pzpi-23-1-titarenko-mykyta-lab4/smp-pzpi-23-1-titarenko-mykyta-lab4-code/setup.php
+
+1	<?php
+2	$db = new PDO('sqlite:shop.db');
+3	$db->exec("CREATE TABLE IF NOT EXISTS user (
+4	    user_id INTEGER PRIMARY KEY AUTOINCREMENT,
+5	    login TEXT UNIQUE,
+6	    password TEXT,
+7	    user_name TEXT,
+8	    user_surname TEXT,
+9	    birthday_date DATE,
+10	    description TEXT,
+11	    last_login DATETIME
+12	)");
+13	
+14	$db->exec("CREATE TABLE IF NOT EXISTS product (
+15	    product_id INTEGER PRIMARY KEY AUTOINCREMENT, 
+16	    product_name TEXT, 
+17	    product_price TEXT
+18	)");
+19	
+20	$db->exec("CREATE TABLE IF NOT EXISTS user_product (
+21	    user_id INTEGER, 
+22	    product_id INTEGER, 
+23	    quantity INTEGER,
+24	    PRIMARY KEY(user_id, product_id),
+25	    FOREIGN KEY(user_id) REFERENCES user(user_id),
+26	    FOREIGN KEY(product_id) REFERENCES product(product_id)
+27	)");
+28	
+29	$db->exec("INSERT INTO product (product_name, product_price) VALUES 
+30	    ('Молоко пастеризоване', 12),
+31	    ('Хліб чорний', 9),
+32	    ('Сир білий',  2),
+33	    ('Сметана 20%', 25),
+34	    ('Кефір 1%', 19),
+35	    ('Вода газована', 18),
+36	    ('Печиво \"Весна\"', 14)");
+
+
+Б.5 { header.html }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab4/smp-pzpi-23-1-titarenko-mykyta-lab4/smp-pzpi-23-1-titarenko-mykyta-lab4-code/header.html
+
+1	<header style="display: flex; justify-content: space-around;">
+2	    <nav style="display: flex; align-items:center">
+3	        <img src="images/home_icon.png" width="50px" height="50px">
+4	        <a href="index.php">Home</a>
+5	    </nav>
+6	    <nav style="display: flex; align-items:center">
+7	        <img src="images/menu_icon.png" width="50px" height="50px">
+8	        <a href="index.php">Products</a>
+9	    </nav>
+10	    <?php if (isset($_SESSION['user_id'])){ ?>
+11	    <nav style="display: flex; align-items:center">
+12	        <img src="images/cart_icon.png" width="50px" height="50px">
+13	        <a href="index.php?product_purchased">Cart</a>
+14	    </nav>
+15	    <nav style="display: flex; align-items:center">
+16	        <img src="images/profile_icon.png" width="50px" height="50px">
+17	        <a href="index.php?profile">Profile</a>
+18	    </nav>
+19	    <?php }?>
+20	    <nav style="display: flex; align-items:center">
+21	        <img src="images/profile_icon.png" width="50px" height="50px">
+22	        <a href="index.php?login"> <?php echo isset($_SESSION['user_id']) ? 'logout' : 'login' ?></a>
+23	    </nav> 
+24	
+25	</header>
+
+Б.6 { footer.html }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab4/smp-pzpi-23-1-titarenko-mykyta-lab4/smp-pzpi-23-1-titarenko-mykyta-lab4-code/footer.html
+
+1	<footer style="display: flex; justify-content: space-around;">
+2	    <nav>
+3	        <a href="index.php">Home</a>
+4	    </nav>
+5	    <nav>
+6	        <a href="index.php">Products</a>
+7	    </nav>
+8	    <nav>
+9	        <a href="index.php?product_purchased=true">Cart</a>
+10	    </nav>
+11	    <nav>
+12	        <a href="#">About us</a>
+13	    </nav>
+14	</footer>
+
+Б.7 { login.php }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab4/smp-pzpi-23-1-titarenko-mykyta-lab4/smp-pzpi-23-1-titarenko-mykyta-lab4-code/login.php
+
+1	<!DOCTYPE html>
+2	<html lang="en" style="height: 100%; display: flex; flex-direction: column">
+3	<head>
+4	    <meta charset="UTF-8">
+5	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+6	    <title>Login</title>
+7	</head>
+8	<body style="height: 100%; display: flex; flex-direction: column">
+9	    <form method="POST" action="index.php?login" style="display: flex; align-items: center; justify-content: center; flex: 1; flex-direction: column">
+10	        <input type="text" name="userName" placeholder="User Name" style="font-size: 30px; margin: 50px">
+11	        <input type="text" name="password" placeholder="Password" style="font-size: 30px; margin: 50px">
+12	        <input type="submit" value="login" style="font-size: 30px; margin-left: 300px;">
+13	        <p style="font-size: 30px; margin: 50px; color: red; visibility: <?php echo !isset($dataSuccess) || $dataSuccess ? 'collapse' : 'visible'?>;">Логін і пароль повинні складатися з двох або більше символів</p>
+14	        <p style="font-size: 30px; margin: 50px; color: red; visibility: <?php echo !isset($passwordSuccess) || $passwordSuccess ? 'collapse' : 'visible'?>;">Пароль неправильний</p>
+15	    </form>
+16	</body>
+17	</html>
+
+Б.8 { profile.php }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab4/smp-pzpi-23-1-titarenko-mykyta-lab4/smp-pzpi-23-1-titarenko-mykyta-lab4-code/profile.php
+
+1	<!DOCTYPE html>
+2	<html lang="en" style="display:flex; height:100%; flex-direction:column">
+3	
+4	<head>
+5	    <meta charset="UTF-8">
+6	    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+7	    <title>Profile</title>
+8	</head>
+9	<?php 
+10	require_once('db_user_functions.php');
+11	?>
+12	<body style="display:flex; height:100%; flex-direction:column">
+13	    <div style="display: flex; flex: 1;">
+14	        <form method="POST" enctype="multipart/form-data" action="index.php?profile" style="display: flex">
+15	            <div style="display: flex; flex: 1; flex-direction: column;">
+16	                <img src="<?php $file = glob('uploads/' . $user_id . '.*'); 
+17	                echo empty($file) ? "images/image_icon.png" : $file[0] ?>" width="500">
+18	                <input id="file" type="file" name="userfile" style="display: none" accept="image/*" onchange="this.form.submit()"/>
+19	                <button onclick="document.getElementById('file').click()" type="button">
+20	                    Upload
+21	                </button>
+22	            </div>
+23	        <div style="display: flex; flex: 3; flex-direction: column;">
+24	            <div style="display: flex; flex-direction: row;">
+25	                <?php $userInformation = getUserInformation() ?>
+26	                <input type="text" value="<?php echo $userInformation['user_name']?>" name="name" placeholder="Name" style="font-size: 30px; margin: 50px">
+27	                <input type="text" value="<?php echo $userInformation['user_surname']?>" name="surname" placeholder="Surname" style="font-size: 30px; margin: 50px">
+28	                <input type="date" value="<?php echo $userInformation['birthday_date']?>" name="birthdayDate" style="font-size: 30px; margin: 50px">
+29	            </div>
+30	            <textarea name="description" placeholder="description" style="font-size: 30px; margin: 50px; height: 300px;"><?php echo $userInformation['description']?></textarea>
+31	            <p style="font-size: 30px; margin: 50px; color: red; visibility: <?php echo !isset($changeSuccess) || $changeSuccess ? 'collapse' : 'visible'?>;">Поля заповнені неправильно</p>
+32	            <input type="submit" value="save" style="font-size: 30px; margin-left: 1000px;">
+33	        </div>
+34	        </form>
+35	    </div>
+36	</body>
+37	</html>
+
+Б.9 { db_products_functions.php }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab4/smp-pzpi-23-1-titarenko-mykyta-lab4/smp-pzpi-23-1-titarenko-mykyta-lab4-code/db_products_functions.php
+
+1	<?php
+2	//Отримання всіх товарів з магазину
+3	function getProducts()
+4	{
+5	    global $db;
+6	    $statement = $db->query('SELECT product_id, product_name, product_price FROM product');
+7	    return $statement->fetchAll(PDO::FETCH_ASSOC);
+8	}
+9	
+10	//Отримання товарів з кошику користувача
+11	function getProductsFromCart()
+12	{
+13	    global $db;
+14	    global $user_id;
+15	    $statement = $db->prepare('
+16	    SELECT 
+17	        up.product_id, 
+18	        p.product_name, 
+19	        p.product_price, 
+20	        up.quantity, 
+21	        p.product_price * up.quantity AS total_price 
+22	    FROM user_product up 
+23	    LEFT JOIN product p
+24	    ON p.product_id = up.product_id
+25	    WHERE up.user_id = :user_id');
+26	    $statement->bindParam(':user_id', $user_id);
+27	    $statement->execute();
+28	    return $statement->fetchAll(PDO::FETCH_ASSOC);
+29	}
+30	
+31	//Отримання загальної ціни кошика
+32	function getTotalPrice(){
+33	    global $db;
+34	    global $user_id;
+35	    $statement = $db->prepare('SELECT SUM(p.product_price * up.quantity) AS total_sum 
+36	        FROM user_product up 
+37	        LEFT JOIN product p
+38	        ON up.product_id = p.product_id
+39	        WHERE up.user_id = :user_id');
+40	    $statement->bindParam(':user_id', $user_id);
+41	    $statement->execute();
+42	    return $statement->fetch(PDO::FETCH_COLUMN);
+43	}
+44	
+45	//Додавання товару у кошик користувача
+46	function insertProduct($index, $quantity)
+47	{
+48	    global $db;
+49	    global $user_id;
+50	    $statement = $db->prepare('INSERT INTO user_product (user_id, product_id, quantity) VALUES (:user_id, :product_id, :quantity)');
+51	    $statement->bindParam(':user_id', $user_id);
+52	    $statement->bindParam(':product_id', $index);
+53	    $statement->bindParam(':quantity', $quantity);
+54	    $statement->execute();
+55	}
+56	
+57	//Видалення товару з кошика користувача
+58	function deleteFromCart($index)
+59	{
+60	    global $db;
+61	    global $user_id;
+62	    $statement = $db->prepare('DELETE FROM user_product WHERE user_id = :user_id AND product_id = :product_id');
+63	    $statement->bindParam(':user_id', $user_id);
+64	    $statement->bindParam(':product_id', $index);
+65	    $statement->execute();
+66	}
+67	
+68	//Перевірка на наявність товару у кошику користувача
+69	function productInCartExist($index)
+70	{
+71	    global $db;
+72	    global $user_id;
+73	    $statement = $db->prepare('SELECT EXISTS(SELECT 1 FROM user_product WHERE user_id = :user_id AND product_id = :product_id) AS found');
+74	    $statement->bindParam(':user_id', $user_id);
+75	    $statement->bindParam(':product_id', $index);
+76	    $statement->execute();
+77	    $test = $statement->fetchAll(PDO::FETCH_ASSOC);
+78	    return $test;
+79	}
+
+Б.10 { db_user_functions.php }
+
+GitHub репозиторій: https://github.com/NureTitarenkoMykyta/smp-pzpi-23-1-titarenko-mykyta/tree/main/Lab4/smp-pzpi-23-1-titarenko-mykyta-lab4/smp-pzpi-23-1-titarenko-mykyta-lab4-code/db_user_functions.php
+
+1	<?php
+2	//Оновлення кількості товару у кошику користувача
+3	function updateProductFromCart($index, $quantity)
+4	{
+5	    global $db;
+6	    global $user_id;
+7	    $statement = $db->prepare('UPDATE user_product SET quantity = :quantity WHERE user_id = :user_id AND product_id = :product_id');
+8	    $statement->bindParam(':user_id', $user_id);
+9	    $statement->bindParam(':product_id', $index);
+10	    $statement->bindParam(':quantity', $quantity);
+11	    $statement->execute();
+12	}
+13	
+14	//Реєстрація нового користувача
+15	function registration($login, $password)
+16	{
+17	    global $db;
+18	    $statement = $db->query('INSERT INTO user (login, password) VALUES (:login, :password)');
+19	    $statement->bindParam(':login', $login);
+20	    $statement->bindParam(':password', $password);
+21	    $statement->execute();
+22	    $user_id = $db->lastInsertId();
+23	    $_SESSION['user_id'] = $user_id;
+24	    lastLoginChange();
+25	}
+26	
+27	//Зміна дати і часу останнього входження користувача у систему
+28	function lastLoginChange(){
+29	    global $db;
+30	    global $user_id;
+31	    $statement = $db->query("UPDATE user SET last_login = datetime('now') WHERE user_id = :user_id");
+32	    $statement->bindParam(':user_id', $user_id);
+33	    $statement->execute();
+34	}
+35	
+36	//Перевірка на існування користувача з вказаним логіном
+37	function userExist($login)
+38	{
+39	    global $db;
+40	    $statement = $db->prepare('SELECT EXISTS(SELECT 1 FROM user WHERE login = :login) AS found');
+41	    $statement->bindParam(':login', $login);
+42	    $statement->execute();
+43	    return $statement->fetch(PDO::FETCH_ASSOC);
+44	}
+45	
+46	//Входження користувача в акаунт. Якщо пароль неправильний, повертає false
+47	function login($login, $password)
+48	{
+49	    global $db;
+50	    $statement = $db->prepare('SELECT user_id FROM user WHERE login = :login AND password = :password');
+51	    $statement->bindParam(':login', $login);
+52	    $statement->bindParam(':password', $password);
+53	    $statement->execute();
+54	    $data = $statement->fetch(PDO::FETCH_ASSOC);
+55	    $user_id = $data['user_id'];
+56	    if ($data) {
+57	        $_SESSION['user_id'] = $user_id;
+58	        lastLoginChange();
+59	    }
+60	    return $data;
+61	}
+62	
+63	//Зміна особистих даних користувача
+64	function changeUserInformation($name, $surname, $birthdayDate, $description)
+65	{
+66	    $currentDate = new DateTime();
+67	    $userDate = new DateTime($birthdayDate);
+68	    $ageDifference = $currentDate->diff($userDate);
+69	    if (strlen($name) <= 1 || strlen($surname) <= 1 || $ageDifference->y < 18 || strlen($description) < 50) {
+70	        return false;
+71	    }
+72	    global $db;
+73	    global $user_id;
+74	    $statement = $db->prepare('UPDATE user SET user_name = :user_name, user_surname = :user_surname, birthday_date = :birthday_date, description = :description WHERE user_id = :user_id');
+75	    $statement->bindParam(':user_id', $user_id);
+76	    $statement->bindParam(':user_name', $name);
+77	    $statement->bindParam(':user_surname', $surname);
+78	    $statement->bindParam(':birthday_date', $birthdayDate);
+79	    $statement->bindParam(':description', $description);
+80	    $statement->execute();
+81	    return true;
+82	}
+83	
+84	//Отримання особистих даних користувача
+85	function getUserInformation(){
+86	    global $db;
+87	    global $user_id;
+88	    $statement = $db->prepare('SELECT user_name, user_surname, birthday_date, description FROM user WHERE user_id = :user_id');
+89	    $statement->bindParam(':user_id', $user_id);
+90	    $statement->execute();
+91	    return $statement->fetch(PDO::FETCH_ASSOC);
+92	}
+								                                                   8
