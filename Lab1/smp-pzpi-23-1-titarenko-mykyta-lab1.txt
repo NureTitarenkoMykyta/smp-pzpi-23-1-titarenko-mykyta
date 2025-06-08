@@ -142,6 +142,19 @@
 2.	Sed Command in Linux/Unix With Examples / geeksforgeeks. URL:  https://www.geeksforgeeks.org/sed-command-in-linux-unix-with-examples/ (дата звернення: 24.03.2025).
  
 ДОДАТОК А
+Відеозапис
+Відеозапис презентації результатів лабораторної роботи: https://youtu.be/LiwJxQ8xveM
+
+Хронологічний опис відеозапису:
+
+0:00 - Створення бази даних (setup.php);
+1:29 - Основна сторінка (index.php);
+2:41 - Відображення товарів (products.php);
+4:25 - Обробка POST запиту та додавання товарів до бази даних;
+5:40 - Відображення товарів у кошику та видалення з нього;
+7:06 - Показ результату роботи.
+
+ДОДАТОК А
 
 Реалізація функції  convert_csv_for_import_in_Google_Calendar:
 1.	convert_csv_for_import_in_Google_Calendar(){

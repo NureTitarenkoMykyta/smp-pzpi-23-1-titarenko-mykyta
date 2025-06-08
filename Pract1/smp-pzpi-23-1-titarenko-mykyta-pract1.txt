@@ -119,6 +119,19 @@
 2.	Bash Function & How to Use It {Variables, Arguments, Return} / DevOps and Development / KB / phoenixnap. URL:  https://phoenixnap.com/kb/bash-function (дата звернення: 15.03.2025).  
  
 ДОДАТОК А
+Відеозапис
+Відеозапис презентації результатів практичної роботи: https://youtu.be/UuK7mxkhYps
+
+Хронологічний опис відеозапису:
+
+0:00 - Створення бази даних (setup.php);
+1:29 - Основна сторінка (index.php);
+2:41 - Відображення товарів (products.php);
+4:25 - Обробка POST запиту та додавання товарів до бази даних;
+5:40 - Відображення товарів у кошику та видалення з нього;
+7:06 - Показ результату роботи.
+
+ДОДАТОК Б
 
 1.	#!/bin/bash
 2.	
